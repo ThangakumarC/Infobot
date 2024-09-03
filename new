@@ -1,0 +1,41 @@
+import os
+import sqlite3
+import speech_recognition as sr
+from gtts import gTTS
+from deep_translator import GoogleTranslator
+import vosk
+import json
+
+# Load Vosk model for speech recognition
+def load_vosk_model(model_path):
+    return vosk.Model(model_path)
+
+# Transcribe audio with Vosk
+def transcribe_audio_with_vosk(audio_path, model):
+    rec = vosk.KaldiRecognizer(model, 16000)
+    with open(audio_path, "rb") as audio_file:
+        audio_data = audio_file.read()
+    rec.AcceptWaveform(audio_data)
+    result = json.loads(rec.Result())
+    return result.get('text', '')
+
+# Detect and translate text
+def translate_text(text, target_language='en'):
+    translator = GoogleTranslator()
+    return translator.translate(text, target=target_language)
+
+# Convert text to speech
+def text_to_speech(text, lang='en'):
+    tts = gTTS(text=text, lang=lang)
+    audio_path = "output.mp3"
+    tts.save(audio_path)
+    os.system(f"start {audio_path}")
+
+# Query SQLite database
+def query_database(query):
+    conn = sqlite3.connect('C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage')
+    cursor = conn.cursor()
+    cursor.execute(query)
+    result = cursor.fetchall()
+    conn.close()
+    return result
