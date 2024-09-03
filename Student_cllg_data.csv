@@ -1,0 +1,11 @@
+StudentID,FirstName,LastName,Age,Gender,CollegeName,Major,EnrollmentYear,CurrentGPA
+1,John,Doe,20,Male,College of Engineering,Computer Science,2022,3.5
+2,Jane,Smith,21,Female,College of Business,Marketing,2021,3.8
+3,Michael,Brown,22,Male,College of Arts,Graphic Design,2023,3.2
+4,Emily,Davis,19,Female,College of Science,Biochemistry,2024,3.6
+5,Daniel,Wilson,21,Male,College of Engineering,Mechanical Engineering,2021,3.7
+6,Alice,Johnson,22,Female,College of Business,Finance,2022,3.9
+7,Robert,Lee,20,Male,College of Arts,Music,2023,3.4
+8,Olivia,Martinez,21,Female,College of Science,Physics,2021,3.5
+9,James,Anderson,23,Male,College of Engineering,Electrical Engineering,2020,3.3
+10,Sophia,Thomas,19,Female,College of Business,International Business,2024,3.7
