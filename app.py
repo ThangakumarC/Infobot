@@ -4,6 +4,331 @@
 # from csv_db import CSV_2_DB
 # from GenAi import Gen_Ai
 # import streamlit as st
+# import speech_recognition as sr
+# from gtts import gTTS
+# from deep_translator import GoogleTranslator
+# from langdetect import detect, LangDetectException
+# from groq import Groq
+
+# # Initialize Groq client with your API key
+# api_key = "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"
+# client = Groq(api_key=api_key)
+
+# def play_audio(text, lang='en'):
+#     try:
+#         # Convert text to speech and save it to a file
+#         tts = gTTS(text=text, lang=lang)
+#         audio_file = "temp_audio.mp3"
+#         tts.save(audio_file)
+        
+#         # Read the audio file and display it in Streamlit
+#         with open(audio_file, "rb") as f:
+#             audio_bytes = f.read()
+#             st.audio(audio_bytes, format='audio/mp3')
+
+#         # Optionally, delete the file after usage
+#         os.remove(audio_file)
+#     except Exception as e:
+#         st.error(f"Error generating audio: {e}")
+
+# def detect_language(text):
+#     try:
+#         return detect(text)
+#     except LangDetectException:
+#         return 'en'
+#     except Exception as e:
+#         st.error(f"Error detecting language: {e}")
+#         return 'en'
+
+# def translate_text(text, source_lang='en', target_lang='en'):
+#     try:
+#         translator = GoogleTranslator(source=source_lang, target=target_lang)
+#         return translator.translate(text)
+#     except Exception as e:
+#         st.error(f"Error translating text: {e}")
+#         return text
+
+# def transcribe_audio_with_groq(file_path, language='ta'):
+#     try:
+#         with open(file_path, "rb") as file:
+#             transcription = client.audio.transcriptions.create(
+#                 file=(os.path.basename(file_path), file.read()),  # Provide filename and file content
+#                 model="whisper-large-v3",
+#                 prompt="Specify context or spelling",  # Optional
+#                 response_format="json",  # Optional
+#                 language=language,  # Language code
+#                 temperature=0.0  # Optional
+#             )
+#         return transcription.text
+#     except Exception as e:
+#         st.error(f"Error during transcription: {e}")
+#         return ""
+
+# def main():
+#     st.title("InfoBot")
+
+#     with st.sidebar:
+#         st.subheader("Upload CSV Files")
+#         uploaded_files = st.file_uploader("Upload CSV files", accept_multiple_files=True)
+#         if uploaded_files:
+#             for uploaded_file in uploaded_files:
+#                 file_path = os.path.join("storage", uploaded_file.name)
+#                 with open(file_path, "wb") as f:
+#                     f.write(uploaded_file.getbuffer())
+#             CSV_2_DB()
+#             st.write(":green[DB created]")
+
+#     # Provide options for text or voice input
+#     input_mode = st.radio("Choose input mode", ("Text", "Voice"))
+
+#     if input_mode == "Text":
+#         user_query = st.text_input("Enter your query", key="query_input")
+#         detected_language = detect_language(user_query)
+#         st.write(f"Detected Language: {detected_language}")
+
+#         # Translate to English for query processing
+#         translated_query = translate_text(user_query, source_lang=detected_language, target_lang='en')
+
+#     elif input_mode == "Voice":
+#         if st.button("Record Voice Query"):
+#             recognizer = sr.Recognizer()
+#             with sr.Microphone() as source:
+#                 st.write("Listening...")
+#                 audio = recognizer.listen(source)
+#                 try:
+#                     audio_file_path = "temp_audio.wav"
+#                     with open(audio_file_path, "wb") as audio_file:
+#                         audio_file.write(audio.get_wav_data())
+
+#                     # Transcribe the recorded audio using Groq
+#                     transcription_text = transcribe_audio_with_groq(audio_file_path, language='ta')
+#                     st.write(f"Recorded Query: {transcription_text}")
+
+#                     # Detect language from the transcribed text
+#                     detected_language = detect_language(transcription_text)
+#                     st.write(f"Detected Language: {detected_language}")
+
+#                     # Translate to English for query processing
+#                     translated_query = translate_text(transcription_text, source_lang=detected_language, target_lang='en')
+
+#                 except sr.UnknownValueError:
+#                     st.error("Sorry, I could not understand the audio.")
+#                     return
+#                 except sr.RequestError:
+#                     st.error("Sorry, there was an issue with the speech recognition service.")
+#                     return
+#         else:
+#             st.warning("Click 'Record Voice Query' to start recording.")
+
+#     if 'user_query' in locals() or (input_mode == "Voice" and 'transcription_text' in locals()):
+#         try:
+#             result, query = Gen_Ai(translated_query, detected_language)
+
+#             # Translate the result back to the original language
+#             final_result = translate_text(result, source_lang='en', target_lang=detected_language)
+            
+#             st.write(f"SQL Query: {query}")
+#             st.write(f":green[{final_result}]")
+
+#             # Convert the result to speech and play it
+#             play_audio(final_result, lang=detected_language)
+#         except Exception as e:
+#             st.error(f"Error: {e}")
+
+# if __name__ == "__main__":
+#     main()
+
+
+
+# import os
+# import sqlite3
+# import pandas as pd
+# from csv_db import CSV_2_DB
+# from GenAi import Gen_Ai
+# import streamlit as st
+# import speech_recognition as sr
+# from gtts import gTTS
+# from deep_translator import GoogleTranslator
+# from langdetect import detect, LangDetectException
+
+# def play_audio(text, lang='en'):
+#     try:
+#         # Convert text to speech and save it to a file
+#         tts = gTTS(text=text, lang=lang)
+#         audio_file = "temp_audio.mp3"
+#         tts.save(audio_file)
+        
+#         # Read the audio file and display it in Streamlit
+#         with open(audio_file, "rb") as f:
+#             audio_bytes = f.read()
+#             st.audio(audio_bytes, format='audio/mp3')
+
+#         # Optionally, delete the file after usage
+#         os.remove(audio_file)
+#     except Exception as e:
+#         st.error(f"Error generating audio: {e}")
+
+# def detect_language(text):
+#     try:
+#         return detect(text)
+#     except LangDetectException:
+#         return 'en'
+#     except Exception as e:
+#         st.error(f"Error detecting language: {e}")
+#         return 'en'
+
+# def translate_text(text, source_lang='en', target_lang='en'):
+#     try:
+#         translator = GoogleTranslator(source=source_lang, target=target_lang)
+#         return translator.translate(text)
+#     except Exception as e:
+#         st.error(f"Error translating text: {e}")
+#         return text
+
+# def main():
+#     st.title("InfoBot")
+
+#     with st.sidebar:
+#         st.subheader("Upload CSV Files")
+#         uploaded_files = st.file_uploader("Upload CSV files", accept_multiple_files=True)
+#         if uploaded_files:
+#             for uploaded_file in uploaded_files:
+#                 file_path = os.path.join(r"C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage", uploaded_file.name)
+#                 with open(file_path, "wb") as f:
+#                     f.write(uploaded_file.getbuffer())
+#             CSV_2_DB()
+#             st.write(":green[DB created]")
+
+#     user_query = st.text_input("Enter your query", key="query_input")
+
+#     if st.button("Record Voice Query"):
+#         recognizer = sr.Recognizer()
+#         with sr.Microphone() as source:
+#             st.write("Listening...")
+#             audio = recognizer.listen(source)
+#             try:
+#                 user_query = recognizer.recognize_google(audio)
+#                 st.write(f"Recorded Query: {user_query}")
+
+#                 # Detect language from the voice input
+#                 detected_language = detect_language(user_query)
+#                 st.write(f"Detected Language: {detected_language}")
+
+#                 # Translate to English for query processing
+#                 translated_query = translate_text(user_query, source_lang=detected_language, target_lang='en')
+
+#             except sr.UnknownValueError:
+#                 st.error("Sorry, I could not understand the audio.")
+#                 return
+#             except sr.RequestError:
+#                 st.error("Sorry, there was an issue with the speech recognition service.")
+#                 return
+#     else:
+#         detected_language = detect_language(user_query)
+#         translated_query = translate_text(user_query, source_lang=detected_language, target_lang='en')
+
+#     if user_query:
+#         try:
+#             result, query = Gen_Ai(translated_query, detected_language)
+
+#             # Translate the result back to the original language
+#             final_result = translate_text(result, source_lang='en', target_lang=detected_language)
+            
+#             st.write(f"SQL Query : {query}")
+#             st.write(f":green[{final_result}]")
+
+#             # Convert the result to speech and play it
+#             play_audio(final_result, lang=detected_language)
+#         except Exception as e:
+#             st.error(f"Error: {e}")
+
+# if __name__ == "__main__":
+#     main()
+
+# import os
+# import sqlite3
+# import speech_recognition as sr
+# from gtts import gTTS
+# from deep_translator import GoogleTranslator
+# import vosk
+# import json
+
+# # Load Vosk model for speech recognition
+# def load_vosk_model(model_path):
+#     try:
+#         model = vosk.Model(model_path)
+#         return model
+#     except Exception as e:
+#         print(f"Error loading Vosk model: {e}")
+#         return None
+
+# # Transcribe audio with Vosk
+# def transcribe_audio_with_vosk(audio_path, model):
+#     rec = vosk.KaldiRecognizer(model, 16000)
+#     with open(audio_path, "rb") as audio_file:
+#         audio_data = audio_file.read()
+#     rec.AcceptWaveform(audio_data)
+#     result = json.loads(rec.Result())
+#     return result.get('text', '')
+
+# # Detect and translate text
+# def translate_text(text, target_language='en'):
+#     translator = GoogleTranslator()
+#     return translator.translate(text, target=target_language)
+
+# # Convert text to speech
+# def text_to_speech(text, lang='en'):
+#     tts = gTTS(text=text, lang=lang)
+#     audio_path = "output.mp3"
+#     tts.save(audio_path)
+#     os.system(f"start {audio_path}")
+
+# # Query SQLite database
+# def query_database(query):
+#     # Corrected file path
+#     conn = sqlite3.connect(r'C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage\DataBase.db')
+#     cursor = conn.cursor()
+#     cursor.execute(query)
+#     result = cursor.fetchall()
+#     conn.close()
+#     return result
+
+# # Main function to handle user input
+# def main():
+#     # Paths to the models
+#     # Corrected path
+#     vosk_model_path = r"C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\vosk_model"
+#     vosk_model = load_vosk_model(vosk_model_path)
+
+#     # Record audio or use existing audio file
+#     audio_path = "input.wav"  # Update with your audio file path
+
+#     # Transcribe audio
+#     text = transcribe_audio_with_vosk(audio_path, vosk_model)
+#     print(f"Transcribed Text: {text}")
+
+#     # Translate text if needed (e.g., from non-English to English)
+#     translated_text = translate_text(text, target_language='en')
+#     print(f"Translated Text: {translated_text}")
+
+#     # Query the database
+#     query = f"SELECT * FROM your_table WHERE your_column='{translated_text}'"  # Update with your query
+#     query_result = query_database(query)
+#     response = str(query_result)
+#     print(f"Query Result: {response}")
+
+#     # Convert response to speech
+#     text_to_speech(response)
+
+# if __name__ == "__main__":
+#     main()
+
+# import os
+# import sqlite3
+# import pandas as pd
+# from csv_db import CSV_2_DB
+# from GenAi import Gen_Ai
+# import streamlit as st
 
 # def main():
 #     st.title("InfoBot")
@@ -204,94 +529,294 @@
 # if __name__ == "__main__":
 #     main()
 
-import os
-import sqlite3
-import pandas as pd
-from csv_db import CSV_2_DB
-from GenAi import Gen_Ai
-import streamlit as st
-import speech_recognition as sr
-from gtts import gTTS
-from langdetect import detect, LangDetectException
 
-def play_audio(text, lang='en'):
-    try:
-        # Convert text to speech and save it to a file
-        tts = gTTS(text=text, lang=lang)
-        audio_file = "temp_audio.mp3"
-        tts.save(audio_file)
+# import os
+# import sqlite3
+# import pandas as pd
+# from csv_db import CSV_2_DB
+# from GenAi import Gen_Ai
+# import streamlit as st
+# import speech_recognition as sr
+# from gtts import gTTS
+# from langdetect import detect, LangDetectException
+
+# def play_audio(text, lang='en'):
+#     try:
+#         # Convert text to speech and save it to a file
+#         tts = gTTS(text=text, lang=lang)
+#         audio_file = "temp_audio.mp3"
+#         tts.save(audio_file)
         
-        # Read the audio file and display it in Streamlit
-        with open(audio_file, "rb") as f:
-            audio_bytes = f.read()
-            st.audio(audio_bytes, format='audio/mp3')
+#         # Read the audio file and display it in Streamlit
+#         with open(audio_file, "rb") as f:
+#             audio_bytes = f.read()
+#             st.audio(audio_bytes, format='audio/mp3')
 
-        # Optionally, delete the file after usage
-        os.remove(audio_file)
-    except Exception as e:
-        st.error(f"Error generating audio: {e}")
+#         # Optionally, delete the file after usage
+#         os.remove(audio_file)
+#     except Exception as e:
+#         st.error(f"Error generating audio: {e}")
 
-def detect_language(text):
-    try:
-        return detect(text)
-    except LangDetectException:
-        return 'en'
-    except Exception as e:
-        st.error(f"Error detecting language: {e}")
-        return 'en'
+# def detect_language(text):
+#     try:
+#         return detect(text)
+#     except LangDetectException:
+#         return 'en'
+#     except Exception as e:
+#         st.error(f"Error detecting language: {e}")
+#         return 'en'
 
-def main():
-    st.title("InfoBot")
+# def main():
+#     st.title("InfoBot")
 
-    with st.sidebar:
-        st.subheader("Upload CSV Files")
-        uploaded_files = st.file_uploader("Upload CSV files", accept_multiple_files=True)
-        if uploaded_files:
-            for uploaded_file in uploaded_files:
-                file_path = os.path.join(r"C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage", uploaded_file.name)
-                with open(file_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
-            CSV_2_DB()
-            st.write(":green[DB created]")
+#     with st.sidebar:
+#         st.subheader("Upload CSV Files")
+#         uploaded_files = st.file_uploader("Upload CSV files", accept_multiple_files=True)
+#         if uploaded_files:
+#             for uploaded_file in uploaded_files:
+#                 file_path = os.path.join(r"C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage", uploaded_file.name)
+#                 with open(file_path, "wb") as f:
+#                     f.write(uploaded_file.getbuffer())
+#             CSV_2_DB()
+#             st.write(":green[DB created]")
 
-    user_query = st.text_input("Enter your query", key="query_input")
+#     user_query = st.text_input("Enter your query", key="query_input")
 
-    if st.button("Record Voice Query"):
-        recognizer = sr.Recognizer()
-        with sr.Microphone() as source:
-            st.write("Listening...")
-            audio = recognizer.listen(source)
-            try:
-                user_query = recognizer.recognize_google(audio)
-                st.write(f"Recorded Query: {user_query}")
+#     if st.button("Record Voice Query"):
+#         recognizer = sr.Recognizer()
+#         with sr.Microphone() as source:
+#             st.write("Listening...")
+#             audio = recognizer.listen(source)
+#             try:
+#                 user_query = recognizer.recognize_google(audio)
+#                 st.write(f"Recorded Query: {user_query}")
 
-                # Detect language from the voice input
-                detected_language = detect_language(user_query)
-                st.write(f"Detected Language: {detected_language}")
+#                 # Detect language from the voice input
+#                 detected_language = detect_language(user_query)
+#                 st.write(f"Detected Language: {detected_language}")
 
-            except sr.UnknownValueError:
-                st.error("Sorry, I could not understand the audio.")
-                return
-            except sr.RequestError:
-                st.error("Sorry, there was an issue with the speech recognition service.")
-                return
-    else:
-        detected_language = detect_language(user_query)
+#             except sr.UnknownValueError:
+#                 st.error("Sorry, I could not understand the audio.")
+#                 return
+#             except sr.RequestError:
+#                 st.error("Sorry, there was an issue with the speech recognition service.")
+#                 return
+#     else:
+#         detected_language = detect_language(user_query)
 
-    if user_query:
-        try:
-            result, query = Gen_Ai(user_query, detected_language)
-            st.write(f"SQL Query : {query}")
-            st.write(f":green[{result}]")
+#     if user_query:
+#         try:
+#             result, query = Gen_Ai(user_query, detected_language)
+#             st.write(f"SQL Query : {query}")
+#             st.write(f":green[{result}]")
 
-            # Convert the result to speech and play it
-            play_audio(result, lang=detected_language)
-        except Exception as e:
-            st.error(f"Error: {e}")
+#             # Convert the result to speech and play it
+#             play_audio(result, lang=detected_language)
+#         except Exception as e:
+#             st.error(f"Error: {e}")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
 
+
+#main..............
+
+# import os
+# import sqlite3
+# import pandas as pd
+# from csv_db import CSV_2_DB
+# from GenAi import Gen_Ai
+# import streamlit as st
+# import speech_recognition as sr
+# from gtts import gTTS
+# from langdetect import detect, LangDetectException
+
+# def play_audio(text, lang='en'):
+#     try:
+#         # Convert text to speech and save it to a file
+#         tts = gTTS(text=text, lang=lang)
+#         audio_file = "temp_audio.mp3"
+#         tts.save(audio_file)
+        
+#         # Read the audio file and display it in Streamlit
+#         with open(audio_file, "rb") as f:
+#             audio_bytes = f.read()
+#             st.audio(audio_bytes, format='audio/mp3')
+
+#         # Optionally, delete the file after usage
+#         os.remove(audio_file)
+#     except Exception as e:
+#         st.error(f"Error generating audio: {e}")
+
+# def detect_language(text):
+#     try:
+#         return detect(text)
+#     except LangDetectException:
+#         return 'en'
+#     except Exception as e:
+#         st.error(f"Error detecting language: {e}")
+#         return 'en'
+
+# def main():
+#     st.title("InfoBot")
+
+#     with st.sidebar:
+#         st.subheader("Upload CSV Files")
+#         uploaded_files = st.file_uploader("Upload CSV files", accept_multiple_files=True)
+#         if uploaded_files:
+#             for uploaded_file in uploaded_files:
+#                 file_path = os.path.join(r"C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage", uploaded_file.name)
+#                 with open(file_path, "wb") as f:
+#                     f.write(uploaded_file.getbuffer())
+#             CSV_2_DB()
+#             st.write(":green[DB created]")
+
+#     user_query = st.text_input("Enter your query", key="query_input")
+
+#     if st.button("Record Voice Query"):
+#         recognizer = sr.Recognizer()
+#         with sr.Microphone() as source:
+#             st.write("Listening...")
+#             audio = recognizer.listen(source)
+#             try:
+#                 user_query = recognizer.recognize_google(audio)
+#                 st.write(f"Recorded Query: {user_query}")
+
+#                 # Detect language from the voice input
+#                 detected_language = detect_language(user_query)
+#                 st.write(f"Detected Language: {detected_language}")
+
+#             except sr.UnknownValueError:
+#                 st.error("Sorry, I could not understand the audio.")
+#                 return
+#             except sr.RequestError:
+#                 st.error("Sorry, there was an issue with the speech recognition service.")
+#                 return
+#     else:
+#         detected_language = detect_language(user_query)
+
+#     if user_query:
+#         try:
+#             result, query = Gen_Ai(user_query, detected_language)
+#             st.write(f"SQL Query : {query}")
+#             st.write(f":green[{result}]")
+
+#             # Convert the result to speech and play it
+#             play_audio(result, lang=detected_language)
+#         except Exception as e:
+#             st.error(f"Error: {e}")
+
+# if __name__ == "__main__":
+#     main()
+
+
+# import os
+# import pandas as pd
+# import streamlit as st
+# import whisper
+# import numpy as np
+# import sounddevice as sd
+# import soundfile as sf
+# from io import BytesIO
+# from langdetect import detect, LangDetectException
+# from gtts import gTTS
+
+# # Load the Whisper model
+# model = whisper.load_model("base")
+
+# def transcribe_audio(audio_data, samplerate):
+#     if samplerate != 16000:
+#         audio_data = resample_poly(audio_data, 16000, samplerate)
+#     audio_bytes = BytesIO()
+#     sf.write(audio_bytes, audio_data, 16000, format='wav')
+#     audio_bytes.seek(0)
+#     result = model.transcribe(audio_bytes)
+#     return result["text"]
+
+# def detect_language(text):
+#     try:
+#         return detect(text)
+#     except LangDetectException:
+#         return 'en'
+#     except Exception as e:
+#         st.error(f"Error detecting language: {e}")
+#         return 'en'
+
+# def play_audio(text, lang='en'):
+#     try:
+#         tts = gTTS(text=text, lang=lang)
+#         audio_file = "temp_audio.mp3"
+#         tts.save(audio_file)
+#         with open(audio_file, "rb") as f:
+#             audio_bytes = f.read()
+#             st.audio(audio_bytes, format='audio/mp3')
+#         os.remove(audio_file)
+#     except Exception as e:
+#         st.error(f"Error generating audio: {e}")
+
+# def generate_query(text):
+#     # This function should generate a SQL query based on the input text
+#     # Placeholder implementation, replace with actual query generation logic
+#     return f"SELECT * FROM your_table WHERE your_column LIKE '%{text}%'"
+
+# def query_database(query, df):
+#     # Execute the query on the DataFrame
+#     try:
+#         filtered_df = df.query(query)
+#         return filtered_df
+#     except Exception as e:
+#         st.error(f"Error querying data: {e}")
+#         return pd.DataFrame()
+
+# def main():
+#     st.title("InfoBot")
+
+#     # CSV Upload Section
+#     st.sidebar.subheader("Upload CSV Files")
+#     uploaded_file = st.sidebar.file_uploader("Upload a CSV file", type=["csv"])
+    
+#     df = pd.DataFrame()
+#     if uploaded_file:
+#         df = pd.read_csv(uploaded_file)
+#         st.sidebar.write("CSV file uploaded successfully.")
+#         st.sidebar.write(df.head())  # Display the first few rows of the DataFrame for verification
+
+#     # Voice Input Section
+#     st.subheader("Voice Input")
+#     if st.button("Start Live Recording"):
+#         st.write("Listening...")
+#         samplerate = 16000
+#         duration = 5  # seconds
+
+#         # Record audio from the microphone
+#         audio_data = sd.rec(int(samplerate * duration), samplerate=samplerate, channels=1, dtype='float32')
+#         sd.wait()
+#         audio_data = audio_data.flatten()
+
+#         # Transcribe the audio data
+#         transcription = transcribe_audio(audio_data, samplerate)
+#         st.write("Transcription:")
+#         st.write(transcription)
+
+#         # Detect language and translate if needed
+#         detected_language = detect_language(transcription)
+#         st.write(f"Detected Language: {detected_language}")
+
+#         # Generate and execute query
+#         query = generate_query(transcription)
+#         st.write(f"Generated Query: {query}")
+
+#         if not df.empty:
+#             result_df = query_database(query, df)
+#             st.write("Query Result:")
+#             st.write(result_df)
+
+#             # Convert the result to speech and play it
+#             result_text = result_df.to_string(index=False)
+#             play_audio(result_text, lang=detected_language)
+
+# if __name__ == "__main__":
+#     main()
 
 #voice
 # import os
@@ -545,3 +1070,94 @@ if __name__ == "__main__":
 #     # Clean up temporary files
 #     os.remove(audio_path)
 #     os.remove(audio_output_path)
+
+
+
+#hope
+import os
+import sqlite3
+import pandas as pd
+from csv_db import CSV_2_DB
+from GenAi import Gen_Ai
+import streamlit as st
+import speech_recognition as sr
+from gtts import gTTS
+from langdetect import detect, LangDetectException
+
+def play_audio(text, lang='en'):
+    try:
+        # Convert text to speech and save it to a file
+        tts = gTTS(text=text, lang=lang)
+        audio_file = "temp_audio.mp3"
+        tts.save(audio_file)
+        
+        # Read the audio file and display it in Streamlit
+        with open(audio_file, "rb") as f:
+            audio_bytes = f.read()
+            st.audio(audio_bytes, format='audio/mp3')
+
+        # Optionally, delete the file after usage
+        os.remove(audio_file)
+    except Exception as e:
+        st.error(f"Error generating audio: {e}")
+
+def detect_language(text):
+    try:
+        return detect(text)
+    except LangDetectException:
+        return 'en'
+    except Exception as e:
+        st.error(f"Error detecting language: {e}")
+        return 'en'
+
+def main():
+    st.title("InfoBot")
+
+    with st.sidebar:
+        st.subheader("Upload CSV Files")
+        uploaded_files = st.file_uploader("Upload CSV files", accept_multiple_files=True)
+        if uploaded_files:
+            for uploaded_file in uploaded_files:
+                file_path = os.path.join(r"C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage", uploaded_file.name)
+                with open(file_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+            CSV_2_DB()  # Ensure this function is defined and working
+            st.write(":green[DB created]")
+
+    user_query = st.text_input("Enter your query", key="query_input")
+
+    if st.button("Record Voice Query"):
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            st.write("Listening...")
+            audio = recognizer.listen(source)
+            try:
+                user_query = recognizer.recognize_google(audio)
+                st.write(f"Recorded Query: {user_query}")
+
+                # Detect language from the voice input
+                detected_language = detect_language(user_query)
+                st.write(f"Detected Language: {detected_language}")
+
+            except sr.UnknownValueError:
+                st.error("Sorry, I could not understand the audio.")
+                return
+            except sr.RequestError:
+                st.error("Sorry, there was an issue with the speech recognition service.")
+                return
+    else:
+        detected_language = detect_language(user_query)
+
+    if user_query:
+        try:
+            result, query = Gen_Ai(user_query, detected_language)
+            st.write(f"SQL Query: {query}")
+            st.write(f":green[{result}]")
+
+            # Convert the result to speech and play it
+            play_audio(result, lang=detected_language)
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+if __name__ == "__main__":
+    main()
