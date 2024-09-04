@@ -1,3 +1,70 @@
+from deep_translator import GoogleTranslator
+from langchain_community.utilities.sql_database import SQLDatabase
+from langchain_groq import ChatGroq
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain, create_sql_query_chain
+
+# Initialize reusable components outside the function
+api_key = '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'
+llm_model = ChatGroq(model="llama3-70b-8192", api_key=api_key)
+translator = GoogleTranslator()
+db_uri = r"sqlite:///C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage\DataBase.db"
+db = SQLDatabase.from_uri(db_uri)
+
+def extract_sql_query(template):
+    answer_prompt = PromptTemplate.from_template(
+        """You are a SQL query extractor. Given the noisy SQL template, extract the SQL query alone. Don't give anything else. Just extract the query and provide it as an answer.
+
+        Noisy_query: {template}
+
+        Answer: """
+    )
+
+    llm_chain = LLMChain(llm=llm_model, prompt=answer_prompt)
+    ans = llm_chain(inputs={"template": template})
+    return ans["text"]
+
+def Gen_Ai(questions, detected_language='en'):
+    # Translate input question to English if needed
+    if detected_language != 'en':
+        translated_question = translator.translate(questions, source=detected_language, target='en')
+    else:
+        translated_question = questions
+
+    # Create and use the SQL query chain
+    chain = create_sql_query_chain(llm_model, db)
+    sql_query = chain.invoke({'question': translated_question})
+    final_query = extract_sql_query(sql_query)
+    
+    # Execute the SQL query
+    try:
+        result = db.run(final_query)
+        result_text = '\n'.join(map(str, result))  # Ensure all results are included in the response
+    except Exception as e:
+        return f"Error executing SQL query: {e}", None
+
+    # Generate response based on SQL result
+    answer_prompt = PromptTemplate.from_template(
+        """Given the following user question, corresponding SQL query, and SQL result, generate a proper reply with a proper structure to give to the user. Don't give anything else except the answer.
+
+        Question: {question}
+        SQL Query: {query}
+        SQL Result: {result}
+
+        Answer: """
+    )
+
+    llm_chain = LLMChain(llm=llm_model, prompt=answer_prompt)
+    ans = llm_chain(inputs={"question": questions, "query": sql_query, "result": result_text})
+
+    # Translate the final answer back to the original language if needed
+    final_answer = ans["text"]
+    if detected_language != 'en':
+        final_answer = translator.translate(final_answer, source='en', target=detected_language)
+
+    return final_answer, final_query
+
+
 # from langchain_community.utilities.sql_database import SQLDatabase
 # from langchain_groq import ChatGroq
 # from langchain.prompts import PromptTemplate
@@ -42,6 +109,64 @@
 #     llm = LLMChain(llm=llm_model, prompt=answer_prompt)
 #     ans = llm(inputs={"question": questions, "query": sql_query, "result": result})
 #     return ans["text"], final
+# from deep_translator import GoogleTranslator
+# from langchain_community.utilities.sql_database import SQLDatabase
+# from langchain_groq import ChatGroq
+# from langchain.prompts import PromptTemplate
+# from langchain.chains import LLMChain, create_sql_query_chain
+
+# def extract_sql_query(template):
+#     answer_prompt = PromptTemplate.from_template(
+#         """You are a SQL query extractor. Given the noisy SQL template, extract the SQL query alone. Don't give anything else. Just extract the query and provide it as an answer.
+
+#         Noisy_query: {template}
+
+#         Answer: """
+#     )
+
+#     llm_model = ChatGroq(model="llama3-70b-8192", api_key='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')
+#     llm = LLMChain(llm=llm_model, prompt=answer_prompt)
+#     ans = llm(inputs={"template": template})
+#     return ans["text"]
+
+# def Gen_Ai(questions, detected_language='en'):
+#     translator = GoogleTranslator()
+
+#     # Detect and translate input question to English if needed
+#     if detected_language != 'en':
+#         translated_question = translator.translate(questions, source=detected_language, target='en')
+#     else:
+#         translated_question = questions
+
+#     # Process the translated question
+#     llm_model = ChatGroq(model="llama3-70b-8192", api_key='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')
+#     db = SQLDatabase.from_uri(r"sqlite:///C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage\DataBase.db")
+#     chain = create_sql_query_chain(llm_model, db)
+#     sql_query = chain.invoke({'question': translated_question})
+#     final = extract_sql_query(sql_query)
+#     result = db.run(final)
+
+#     # Generate response with the SQL result
+#     answer_prompt = PromptTemplate.from_template(
+#         """Given the following user question, corresponding SQL query, and SQL result, generate a proper reply with a proper structure to give to the user. Don't give anything else except the answer.
+
+#         Question: {question}
+#         SQL Query: {query}
+#         SQL Result: {result}
+
+#         Answer: """
+#     )
+
+#     llm = LLMChain(llm=llm_model, prompt=answer_prompt)
+#     ans = llm(inputs={"question": questions, "query": sql_query, "result": result})
+
+#     # Translate the final answer back to the original language if needed
+#     if detected_language != 'en':
+#         final_answer = translator.translate(ans["text"], source='en', target=detected_language)
+#     else:
+#         final_answer = ans["text"]
+
+#     return final_answer, final
 
 #trans***
 # from deep_translator import GoogleTranslator
@@ -97,64 +222,6 @@
 #     final_answer = translator.translate(ans["text"], source='en', target='auto')
 #     return final_answer, final
 
-from deep_translator import GoogleTranslator
-from langchain_community.utilities.sql_database import SQLDatabase
-from langchain_groq import ChatGroq
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain, create_sql_query_chain
-
-def extract_sql_query(template):
-    answer_prompt = PromptTemplate.from_template(
-        """You are a SQL query extractor. Given the noisy SQL template, extract the SQL query alone. Don't give anything else. Just extract the query and provide it as an answer.
-
-        Noisy_query: {template}
-
-        Answer: """
-    )
-
-    llm_model = ChatGroq(model="llama3-70b-8192", api_key='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')
-    llm = LLMChain(llm=llm_model, prompt=answer_prompt)
-    ans = llm(inputs={"template": template})
-    return ans["text"]
-
-def Gen_Ai(questions, detected_language='en'):
-    translator = GoogleTranslator()
-
-    # Detect and translate input question to English if needed
-    if detected_language != 'en':
-        translated_question = translator.translate(questions, source=detected_language, target='en')
-    else:
-        translated_question = questions
-
-    # Process the translated question
-    llm_model = ChatGroq(model="llama3-70b-8192", api_key='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')
-    db = SQLDatabase.from_uri(r"sqlite:///C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage\DataBase.db")
-    chain = create_sql_query_chain(llm_model, db)
-    sql_query = chain.invoke({'question': translated_question})
-    final = extract_sql_query(sql_query)
-    result = db.run(final)
-
-    # Generate response with the SQL result
-    answer_prompt = PromptTemplate.from_template(
-        """Given the following user question, corresponding SQL query, and SQL result, generate a proper reply with a proper structure to give to the user. Don't give anything else except the answer.
-
-        Question: {question}
-        SQL Query: {query}
-        SQL Result: {result}
-
-        Answer: """
-    )
-
-    llm = LLMChain(llm=llm_model, prompt=answer_prompt)
-    ans = llm(inputs={"question": questions, "query": sql_query, "result": result})
-
-    # Translate the final answer back to the original language if needed
-    if detected_language != 'en':
-        final_answer = translator.translate(ans["text"], source='en', target=detected_language)
-    else:
-        final_answer = ans["text"]
-
-    return final_answer, final
 
 #trans
 # from deep_translator import GoogleTranslator
