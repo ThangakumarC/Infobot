@@ -1164,7 +1164,7 @@
 
 
 
-hope corrected tamil
+#hope corrected tamil
 import os
 import sqlite3
 import pandas as pd
