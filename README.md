@@ -14,3 +14,13 @@ InfoBot is a smart and multilingual AI chatbot that allows users to upload CSV f
 🧾 SQL generated and executed dynamically
 🖼️ Clean, modern UI using Tailwind CSS
 🔒 Local SQLite3 database for storage
+
+Structure
+chatbot/
+├── app.py                
+├── GenAi.py              
+├── csv_db.py             
+├── templates/
+│   └── index.html        
+├── storage/
+│   └── DataBase.db       
