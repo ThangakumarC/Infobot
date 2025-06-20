@@ -5,7 +5,7 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, create_sql_query_chain
 
 # Initialize reusable components outside the function
-api_key = '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'
+api_key = 'YOUR_KEY'
 llm_model = ChatGroq(model="llama3-70b-8192", api_key=api_key)
 # translator = GoogleTranslator()
 db_uri = r"sqlite:///C:\Users\MYPC\OneDrive\Desktop\chatbot\chatbot_ui_lite\storage\DataBase.db"
